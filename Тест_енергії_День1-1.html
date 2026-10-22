@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Розквітай · Тест на енергію — День 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F9EFF0;          /* пелюстка */
+    --ink:#3D2733;         /* глибока слива */
+    --ink-soft:#7A6270;    /* слива димчаста */
+    --rose:#B4566C;        /* троянда */
+    --rose-soft:#E7C3CC;
+    --sage:#7C9082;        /* шавлія */
+    --gold:#C9A227;
+    --card:#FFFFFF;
+    --radius:22px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Manrope',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;justify-content:center;
+    line-height:1.55;
+  }
+  .app{width:100%;max-width:430px;padding:22px 18px 40px;display:flex;flex-direction:column;min-height:100vh}
+
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--rose);font-weight:700;text-align:center}
+  h1,h2{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:1.15}
+  h1{font-size:34px;text-align:center;margin:6px 0 4px}
+  .sub{text-align:center;color:var(--ink-soft);font-size:14.5px;max-width:320px;margin:0 auto}
+
+  /* ------- квітка-прогрес ------- */
+  .flower-wrap{display:flex;justify-content:center;margin:18px 0 6px}
+  .petal{fill:#EFDCE1;transition:fill .6s ease, transform .6s ease;transform-origin:60px 60px}
+  .petal.bloomed{fill:var(--rose)}
+  .flower-core{fill:var(--gold)}
+  @media (prefers-reduced-motion: reduce){ .petal{transition:none} }
+
+  /* ------- екрани ------- */
+  .screen{display:none;flex-direction:column;flex:1}
+  .screen.active{display:flex;animation:fadeUp .45s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){ .screen.active{animation:none} }
+
+  .card{background:var(--card);border-radius:var(--radius);padding:26px 22px;box-shadow:0 10px 30px rgba(61,39,51,.07);margin-top:16px}
+
+  .q-count{font-size:12px;letter-spacing:.18em;color:var(--rose);font-weight:700;text-transform:uppercase;margin-bottom:10px}
+  .q-text{font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:600;line-height:1.25;margin-bottom:22px}
+
+  .scale{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .dot{
+    flex:1;aspect-ratio:1;border-radius:50%;
+    border:1.5px solid var(--rose-soft);background:#fff;
+    font-family:'Manrope';font-size:16px;font-weight:600;color:var(--ink-soft);
+    cursor:pointer;transition:all .2s ease;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .dot:hover{border-color:var(--rose)}
+  .dot:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .dot.selected{background:var(--rose);border-color:var(--rose);color:#fff;transform:scale(1.08)}
+  .anchors{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);gap:14px}
+  .anchors span{max-width:46%}
+  .anchors span:last-child{text-align:right}
+
+  .btn{
+    margin-top:auto;width:100%;padding:16px;border:none;border-radius:16px;
+    background:var(--ink);color:#fff;font-family:'Manrope';font-size:16px;font-weight:600;
+    cursor:pointer;transition:opacity .2s, transform .15s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.28;cursor:default}
+  .btn.ghost{background:transparent;color:var(--ink-soft);font-weight:500;padding:12px;margin-top:8px}
+  .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  .nav-row{display:flex;gap:10px;margin-top:22px}
+  .nav-row .btn{margin-top:0}
+  .btn.back{background:#EFE3E6;color:var(--ink);flex:0 0 84px}
+
+  /* ------- результат ------- */
+  .zone-badge{
+    display:inline-block;align-self:center;padding:8px 20px;border-radius:100px;
+    font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#fff;margin-top:14px;
+  }
+  .score-line{text-align:center;font-family:'Cormorant Garamond',serif;font-size:22px;margin-top:14px}
+  .score-line b{font-size:40px;font-weight:600}
+  .zone-text{margin-top:14px;font-size:15px}
+  .zone-text p+p{margin-top:10px}
+  .zones-map{margin-top:18px;border-top:1px solid #F0E2E6;padding-top:14px;font-size:12.5px;color:var(--ink-soft)}
+  .zones-map div{display:flex;justify-content:space-between;padding:3px 0}
+  .zones-map .me{color:var(--ink);font-weight:700}
+
+  /* ------- злодії ------- */
+  .thief{
+    display:flex;align-items:center;gap:12px;
+    background:#fff;border:1.5px solid transparent;border-radius:16px;
+    padding:13px 15px;margin-bottom:9px;cursor:pointer;transition:all .18s;
+    font-size:14.5px;font-weight:500;width:100%;text-align:left;font-family:'Manrope';color:var(--ink);
+  }
+  .thief:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .thief .mark{
+    flex:0 0 22px;height:22px;border-radius:7px;border:1.5px solid var(--rose-soft);
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;transition:all .18s;
+  }
+  .thief.picked{border-color:var(--rose);background:#FDF6F8}
+  .thief.picked .mark{background:var(--rose);border-color:var(--rose)}
+  .thief.disabled{opacity:.38;pointer-events:none}
+  .pick-counter{text-align:center;font-size:13px;color:var(--ink-soft);margin:10px 0 14px}
+  .pick-counter b{color:var(--rose)}
+
+  /* ------- підсумок ------- */
+  .summary-thief{background:#FDF6F8;border-radius:14px;padding:11px 15px;margin-top:8px;font-size:14.5px;font-weight:600}
+  .summary-thief::before{content:"🕯 ";}
+  .footer-note{margin-top:26px;font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.5}
+  .divider{height:1px;background:#F0E2E6;margin:18px 0}
+  .hint{font-size:13px;color:var(--ink-soft);margin-top:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ЕКРАН 0: інтро -->
+  <section class="screen active" id="s-intro">
+    <div class="eyebrow">Розквітай · День 1 · Точка А</div>
+    <h1>Тест на енергію</h1>
+    <p class="sub">7 запитань · 2 хвилини · результат одразу</p>
+    <div class="flower-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120" id="flower" aria-hidden="true">
+        <g id="petals"></g>
+        <circle class="flower-core" cx="60" cy="60" r="11"/>
+      </svg>
+    </div>
+    <div class="card">
+      <p style="font-size:15px">Відповідай не «як має бути», а <b>як є насправді</b> — останні 2–3 тижні твого життя.</p>
+      <p style="font-size:15px;margin-top:10px">Тут немає «поганих» результатів. Будь-яка точка — нормальна точка, з якої починається рух. Квітка вгорі розквітатиме з кожною відповіддю 🌸</p>
+    </div>
+    <button class="btn" style="margin-top:22px" onclick="go('s-q'); renderQ()">Почати</button>
+  </section>
+
+  <!-- ЕКРАН 1: запитання -->
+  <section class="screen" id="s-q">
+    <div class="flower-wrap" style="margin:0 0 4px">
+      <svg width="86" height="86" viewBox="0 0 120 120" id="flower2" aria-hidden="true">
+        <g id="petals2"></g><circle class="flower-core" cx="60" cy="60" r="11"/>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="q-count" id="qCount">Запитання 1 із 7</div>
+      <div class="q-text" id="qText"></div>
+      <div class="scale" id="scale" role="radiogroup"></div>
+      <div class="anchors"><span id="aLeft"></span><span id="aRight"></span></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn back" id="btnBack" onclick="prevQ()">←</button>
+      <button class="btn" id="btnNext" disabled onclick="nextQ()">Далі</button>
+    </div>
+  </section>
+
+  <!-- ЕКРАН 2: результат -->
+  <section class="screen" id="s-result">
+    <div class="eyebrow">Твоя точка А</div>
+    <div class="flower-wrap"><svg width="130" height="130" viewBox="0 0 120 120" id="flower3" aria-hidden="true"><g id="petals3"></g><circle class="flower-core" cx="60" cy="60" r="11"/></svg></div>
+    <span class="zone-badge" id="zoneBadge"></span>
+    <div class="score-line"><b id="scoreNum"></b> / 35</div>
+    <div class="card zone-text" id="zoneText"></div>
+    <div class="card zones-map" id="zonesMap"></div>
+    <button class="btn" style="margin-top:22px" onclick="go('s-thieves')">Далі: що краде мій ресурс →</button>
+  </section>
+
+  <!-- ЕКРАН 3: злодії -->
+  <section class="screen" id="s-thieves">
+    <div class="eyebrow">Частина 2</div>
+    <h1 style="font-size:30px">Що краде мій ресурс?</h1>
+    <p class="sub">Прочитай список і познач <b>три</b>, які найбільше про тебе. Не «найправильніші» — а ті, від яких усередині відгукнулося «ой, це я».</p>
+    <div class="pick-counter">Обрано: <b id="pickNum">0</b> із 3</div>
+    <div id="thiefList"></div>
+    <button class="btn" id="btnThieves" disabled onclick="showSummary()">Показати мою точку А</button>
+  </section>
+
+  <!-- ЕКРАН 4: підсумок -->
+  <section class="screen" id="s-summary">
+    <div class="eyebrow">Розквітай · День 1</div>
+    <h1 style="font-size:30px">Моя точка А</h1>
+    <div class="flower-wrap"><svg width="110" height="110" viewBox="0 0 120 120" aria-hidden="true"><g id="petals4"></g><circle class="flower-core" cx="60" cy="60" r="11"/></svg></div>
+    <div class="card">
+      <div class="q-count">Моя зона енергії</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="zone-badge" style="margin:0" id="zoneBadge2"></span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:22px"><b id="scoreNum2"></b>/35</span>
+      </div>
+      <div class="divider"></div>
+      <div class="q-count">Мої 3 «злодії ресурсу»</div>
+      <div id="summaryThieves"></div>
+      <div class="divider"></div>
+      <p style="font-size:14px;color:var(--ink-soft)">Це не вирок і не оцінка — це карта, з якою ми працюватимемо всі 21 день. Зроби скріншот цього екрана 📸 і збережи: у День 7 він стане частиною твого «портрета», а в День 21 ти порівняєш і не повіриш очам.</p>
+    </div>
+    <div class="hint">Хочеш — поділись своєю зоною в коментарях. Хочеш — залиш тільки собі. Обидва варіанти правильні 💛</div>
+    <button class="btn ghost" onclick="restart()">Пройти ще раз</button>
+    <p class="footer-note">«Розквітай» — освітня програма, не медична послуга. Тест — інструмент самоспостереження, а не діагностики. Якщо втома тривала і сильна — це привід поговорити з лікарем.</p>
+  </section>
+
+</div>
+
+<script>
+const QUESTIONS = [
+  { t:"Як часто ти прокидаєшся втомленою?",
+    l:"майже щодня", r:"майже ніколи", reverse:false },
+  { t:"Як часто ти їси «на автоматі» — за телефоном, на бігу, не помічаючи смаку?",
+    l:"майже завжди", r:"майже ніколи", reverse:false },
+  { t:"Чи відчуваєш ти радість, коли бачиш своє відображення?",
+    l:"майже ніколи", r:"так, часто", reverse:false },
+  { t:"Чи є в тебе сили на щось, крім обов'язків?",
+    l:"зовсім ні", r:"так, регулярно", reverse:false },
+  { t:"Як часто ти дратуєшся «без причини»?",
+    l:"дуже часто", r:"майже ніколи", reverse:false },
+  { t:"Чи є в тебе час тільки для себе?",
+    l:"його немає", r:"є щодня", reverse:false },
+  { t:"Чи відчуваєш ти контакт із власним тілом — його сигнали, потреби, втому?",
+    l:"майже не чую його", r:"так, ми на зв'язку", reverse:false },
+];
+/* Шкала завжди 1–5, де 5 = ресурсний полюс: напрямок заданий якорями,
+   тому бали додаються без інверсії. */
+
+const ZONES = [
+  { min:7,  max:17, name:"Виживаю",  color:"#B4566C",
+    text:`<p><b>Твоя енергія зараз на глибокому мінімумі — і те, що ти взагалі тут, уже багато про тебе говорить.</b></p>
+          <p>Це не лінь, не слабкість і не «розклеїлася». Це стан, у якому тіло довго віддавало більше, ніж отримувало. Хороша новина: саме з цієї зони зміни відчуваються найшвидше — бо кожна крапля догляду падає на суху землю.</p>
+          <p>Твоя стратегія на 21 день: <b>тільки мінімум дня 🔹</b>. Нічого понад. Мінімум — це не «менше за інших», це твоя повноцінна програма.</p>`},
+  { min:18, max:27, name:"Тримаюся", color:"#C9A227",
+    text:`<p><b>Ти тримаєшся — і, схоже, вже давно тримаєш більше, ніж варто тримати одній.</b></p>
+          <p>Сили є, але вони йдуть на «функціонувати», а не на «жити». Знайома фраза «все нормально, просто втомилася»? Ця зона — найпідступніша: у ній можна прожити роки, не помітивши, як «тримаюся» стало «виживаю».</p>
+          <p>Твоя стратегія: мінімум дня 🔹 — щодня, а 🔸 «якщо є ресурс» — чесно за станом. Твоє головне завдання цих трьох тижнів — навчитися повертати енергію собі, а не тільки роздавати.</p>`},
+  { min:28, max:35, name:"Розквітаю", color:"#7C9082",
+    text:`<p><b>У тебе гарний контакт із собою і живий запас енергії — це чудова стартова точка.</b></p>
+          <p>Для тебе ця школа — не «рятувальний круг», а поглиблення: точніше зрозуміти своє тіло, відшліфувати звички, знайти, де ще витікає ресурс (він витікає навіть у цій зоні — просто тихіше).</p>
+          <p>Твоя стратегія: смілово бери 🔸 «якщо є ресурс» — і зверни увагу на запитання, де ти поставила менші бали. Саме там твої точки росту.</p>`},
+];
+
+const THIEVES = [
+  "Хаотичне харчування — коли їм «як вийде і що вийде»",
+  "Пропущений сніданок і перша їжа після обіду",
+  "Скролінг стрічки перед сном",
+  "Відчуття «я всім винна» — провина за відпочинок",
+  "Жодної хвилини тиші за день",
+  "Хронічний недосип — лягаю за північ",
+  "Кава замість їжі, коли немає часу",
+  "Постійна багатозадачність — ніколи не роблю щось одне",
+  "Порівняння себе з іншими в соцмережах",
+  "Майже не буваю на повітрі й не рухаюся",
+];
+
+let answers = new Array(7).fill(0);
+let qi = 0;
+let picked = new Set();
+
+/* --- квітка --- */
+function drawPetals(gId, bloomedCount){
+  const g = document.getElementById(gId); if(!g) return;
+  g.innerHTML = "";
+  for(let i=0;i<7;i++){
+    const angle = i*(360/7)-90;
+    const p = document.createElementNS("http://www.w3.org/2000/svg","ellipse");
+    p.setAttribute("cx",60); p.setAttribute("cy",34);
+    p.setAttribute("rx",13); p.setAttribute("ry",25);
+    p.setAttribute("transform",`rotate(${angle+90} 60 60)`);
+    p.setAttribute("class","petal"+(i<bloomedCount?" bloomed":""));
+    g.appendChild(p);
+  }
+}
+function refreshFlowers(){
+  const n = answers.filter(a=>a>0).length;
+  drawPetals("petals",n); drawPetals("petals2",n);
+  drawPetals("petals3",7); drawPetals("petals4",7);
+}
+
+/* --- навігація --- */
+function go(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0});
+}
+
+/* --- запитання --- */
+function renderQ(){
+  const q = QUESTIONS[qi];
+  document.getElementById("qCount").textContent = `Запитання ${qi+1} із 7`;
+  document.getElementById("qText").textContent = q.t;
+  document.getElementById("aLeft").textContent = "1 — " + q.l;
+  document.getElementById("aRight").textContent = "5 — " + q.r;
+  const sc = document.getElementById("scale"); sc.innerHTML = "";
+  for(let v=1;v<=5;v++){
+    const b = document.createElement("button");
+    b.className = "dot" + (answers[qi]===v ? " selected":"");
+    b.textContent = v;
+    b.setAttribute("role","radio");
+    b.setAttribute("aria-checked", answers[qi]===v);
+    b.onclick = ()=>{ answers[qi]=v; refreshFlowers(); renderQ();
+      document.getElementById("btnNext").disabled = false; };
+    sc.appendChild(b);
+  }
+  document.getElementById("btnNext").disabled = answers[qi]===0;
+  document.getElementById("btnNext").textContent = qi===6 ? "Мій результат 🌸" : "Далі";
+  document.getElementById("btnBack").style.visibility = qi===0 ? "hidden":"visible";
+}
+function nextQ(){
+  if(qi<6){ qi++; renderQ(); }
+  else showResult();
+}
+function prevQ(){ if(qi>0){ qi--; renderQ(); } }
+
+/* --- результат --- */
+function zoneFor(score){ return ZONES.find(z=>score>=z.min && score<=z.max); }
+function showResult(){
+  const score = answers.reduce((a,b)=>a+b,0);
+  const z = zoneFor(score);
+  const badge = document.getElementById("zoneBadge");
+  badge.textContent = z.name; badge.style.background = z.color;
+  document.getElementById("scoreNum").textContent = score;
+  document.getElementById("zoneText").innerHTML = z.text;
+  document.getElementById("zonesMap").innerHTML = ZONES.map(x=>
+    `<div class="${x===z?'me':''}"><span>${x.name}</span><span>${x.min}–${x.max}</span></div>`).join("");
+  refreshFlowers();
+  go("s-result");
+  renderThieves();
+}
+
+/* --- злодії --- */
+function renderThieves(){
+  const list = document.getElementById("thiefList"); list.innerHTML = "";
+  THIEVES.forEach((t,i)=>{
+    const b = document.createElement("button");
+    const isPicked = picked.has(i);
+    b.className = "thief" + (isPicked?" picked":"") + (!isPicked && picked.size>=3 ? " disabled":"");
+    b.innerHTML = `<span class="mark">${isPicked?"✓":""}</span><span>${t}</span>`;
+    b.onclick = ()=>{
+      if(picked.has(i)) picked.delete(i);
+      else if(picked.size<3) picked.add(i);
+      document.getElementById("pickNum").textContent = picked.size;
+      document.getElementById("btnThieves").disabled = picked.size!==3;
+      renderThieves();
+    };
+    list.appendChild(b);
+  });
+}
+
+/* --- підсумок --- */
+function showSummary(){
+  const score = answers.reduce((a,b)=>a+b,0);
+  const z = zoneFor(score);
+  const b2 = document.getElementById("zoneBadge2");
+  b2.textContent = z.name; b2.style.background = z.color;
+  document.getElementById("scoreNum2").textContent = score;
+  document.getElementById("summaryThieves").innerHTML =
+    [...picked].map(i=>`<div class="summary-thief">${THIEVES[i]}</div>`).join("");
+  refreshFlowers();
+  go("s-summary");
+}
+
+function restart(){
+  answers = new Array(7).fill(0); qi = 0; picked = new Set();
+  document.getElementById("pickNum").textContent = 0;
+  document.getElementById("btnThieves").disabled = true;
+  refreshFlowers(); renderQ(); go("s-intro");
+}
+
+drawPetals("petals",0);
+</script>
+</body>
+</html>
